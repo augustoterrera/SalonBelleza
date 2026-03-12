@@ -2,10 +2,16 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-export async function GET() {
-  // Solo disponible en desarrollo
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const token = searchParams.get('token')
+  const seedSecret = process.env.SEED_SECRET
+
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const validToken = seedSecret || 'salon-seed-2026'
+    if (token !== validToken) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
   }
 
   try {
