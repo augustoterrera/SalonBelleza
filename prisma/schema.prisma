@@ -1,0 +1,491 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TenantPlan {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  RECEPTIONIST
+  PROFESSIONAL
+  VIEWER
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentSource {
+  PANEL
+  WHATSAPP
+  WEB
+  SYSTEM
+  IMPORTED
+}
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum CalendarBlockScope {
+  TENANT
+  BRANCH
+  PROFESSIONAL
+}
+
+enum CalendarBlockType {
+  BREAK
+  LUNCH
+  MEETING
+  MAINTENANCE
+  HOLIDAY
+  MANUAL
+  OTHER
+}
+
+model Tenant {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  phone     String?
+  whatsapp  String?
+  email     String?
+  address   String?
+  timezone  String     @default("America/Argentina/Buenos_Aires")
+  plan      TenantPlan @default(FREE)
+  apiKey    String?    @unique
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  users             User[]
+  customers         Customer[]
+  categories        Category[]
+  professionals     Professional[]
+  services          Service[]
+  appointments      Appointment[]
+  businessHours     BusinessHour[]
+  professionalHours ProfessionalHour[]
+  timeOffs          ProfessionalTimeOff[]
+  branches          Branch[]
+  calendarBlocks    CalendarBlock[]
+
+  products    Product[]
+  promotions  Promotion[]
+  sales       Sale[]
+  automations Automation[]
+  messageLogs MessageLog[]
+
+  @@index([slug])
+}
+
+model Branch {
+  id        String    @id @default(cuid())
+  tenantId  String
+  name      String
+  phone     String?
+  whatsapp  String?
+  email     String?
+  address   String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant            Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users             User[]
+  professionals     Professional[]
+  appointments      Appointment[]
+  businessHours     BusinessHour[]
+  professionalHours ProfessionalHour[]
+  timeOffs          ProfessionalTimeOff[]
+  calendarBlocks    CalendarBlock[]
+
+  @@index([tenantId])
+}
+
+model User {
+  id             String    @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  professionalId String?
+  name           String
+  email          String
+  passwordHash   String?
+  role           UserRole
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  tenant              Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch              Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  professional        Professional? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+  createdAppointments Appointment[] @relation("AppointmentCreatedBy")
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model Customer {
+  id                      String    @id @default(cuid())
+  tenantId                String
+  name                    String
+  phone                   String?
+  whatsapp                String?
+  email                   String?
+  birthDate               DateTime?
+  notes                   String?
+  tags                    String[]  @default([])
+  isActive                Boolean   @default(true)
+  source                  String?
+  lastVisitAt             DateTime?
+  totalVisits             Int       @default(0)
+  noShowCount             Int       @default(0)
+  preferredCategoryId     String?
+  preferredProfessionalId String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+
+  tenant                Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  preferredCategory     Category?     @relation("CustomerPreferredCategory", fields: [preferredCategoryId], references: [id])
+  preferredProfessional Professional? @relation("CustomerPreferredProfessional", fields: [preferredProfessionalId], references: [id])
+  appointments          Appointment[]
+  sales                 Sale[]
+  messageLogs           MessageLog[]
+
+  @@index([tenantId])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  color       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  tenant               Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  professionals        ProfessionalCategory[]
+  services             Service[]
+  preferredByCustomers Customer[]             @relation("CustomerPreferredCategory")
+  appointments         Appointment[]
+
+  @@unique([tenantId, name])
+}
+
+model Professional {
+  id        String    @id @default(cuid())
+  tenantId  String
+  branchId  String?
+  name      String
+  phone     String?
+  whatsapp  String?
+  email     String?
+  bio       String?
+  color     String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant       Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch       Branch?                @relation(fields: [branchId], references: [id])
+  users                 User[]
+  categories            ProfessionalCategory[]
+  services              ProfessionalService[]
+  appointments          Appointment[]
+  workingHours          ProfessionalHour[]
+  timeOffs              ProfessionalTimeOff[]
+  calendarBlocks        CalendarBlock[]
+  preferredByCustomers  Customer[]             @relation("CustomerPreferredProfessional")
+
+  @@index([tenantId])
+}
+
+model ProfessionalCategory {
+  professionalId String
+  categoryId     String
+  createdAt      DateTime @default(now())
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  category     Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, categoryId])
+}
+
+model Service {
+  id                    String    @id @default(cuid())
+  tenantId              String
+  categoryId            String
+  name                  String
+  description           String?
+  durationMin           Int
+  price                 Decimal?  @db.Decimal(10,2)
+  priceIsFrom           Boolean   @default(false)
+  bufferBeforeMin       Int       @default(0)
+  bufferAfterMin        Int       @default(0)
+  allowOnlineBooking    Boolean   @default(true)
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id])
+  category      Category              @relation(fields: [categoryId], references: [id])
+  professionals ProfessionalService[]
+  appointments  Appointment[]
+  promotions    Promotion[]
+  saleItems     SaleItem[]
+}
+
+model ProfessionalService {
+  professionalId    String
+  serviceId         String
+  customDurationMin Int?
+  customPrice       Decimal? @db.Decimal(10,2)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, serviceId])
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  customerId     String
+  professionalId String
+  serviceId      String
+  categoryId     String
+
+  status AppointmentStatus @default(PENDING)
+  source AppointmentSource @default(PANEL)
+
+  startAt     DateTime
+  endAt       DateTime
+  durationMin Int
+
+  price      Decimal? @db.Decimal(10,2)
+  finalPrice Decimal? @db.Decimal(10,2)
+
+  serviceNameSnapshot      String
+  professionalNameSnapshot String
+  categoryNameSnapshot     String
+  customerNameSnapshot     String
+  customerPhoneSnapshot    String?
+  customerWhatsappSnapshot String?
+
+  notes         String?
+  internalNotes String?
+  cancelReason  String?
+
+  createdByUserId String?
+
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  branch        Branch?      @relation(fields: [branchId], references: [id])
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  professional  Professional @relation(fields: [professionalId], references: [id])
+  service       Service      @relation(fields: [serviceId], references: [id])
+  category      Category     @relation(fields: [categoryId], references: [id])
+  createdByUser User?        @relation("AppointmentCreatedBy", fields: [createdByUserId], references: [id])
+  messageLogs   MessageLog[]
+
+  @@index([tenantId, startAt])
+  @@index([tenantId, professionalId, startAt])
+  @@index([customerId])
+  @@index([branchId])
+}
+
+model BusinessHour {
+  id             String   @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  dayOfWeek      WeekDay
+  startTime      String
+  endTime        String
+  breakStartTime String?  // hora de inicio del corte (ej: "13:00")
+  breakEndTime   String?  // hora de fin del corte (ej: "15:00")
+  isOpen         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id])
+  branch Branch? @relation(fields: [branchId], references: [id])
+
+  @@unique([tenantId, branchId, dayOfWeek])
+}
+
+model ProfessionalHour {
+  id             String   @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  professionalId String
+  dayOfWeek      WeekDay
+  startTime      String
+  endTime        String
+  isWorking      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  branch       Branch?      @relation(fields: [branchId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@unique([professionalId, dayOfWeek])
+}
+
+model ProfessionalTimeOff {
+  id             String   @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  professionalId String
+  startAt        DateTime
+  endAt          DateTime
+  reason         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  branch       Branch?      @relation(fields: [branchId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+}
+
+model CalendarBlock {
+  id             String             @id @default(cuid())
+  tenantId       String
+  branchId       String?
+  professionalId String?
+  scope          CalendarBlockScope
+  type           CalendarBlockType  @default(MANUAL)
+  title          String
+  description    String?
+  startAt        DateTime
+  endAt          DateTime
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  branch       Branch?       @relation(fields: [branchId], references: [id])
+  professional Professional? @relation(fields: [professionalId], references: [id])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10,2)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  promotions Promotion[]
+  saleItems  SaleItem[]
+}
+
+model Promotion {
+  id          String   @id @default(cuid())
+  tenantId    String
+  serviceId   String?
+  productId   String?
+  title       String
+  description String?
+  discount    Decimal? @db.Decimal(10,2)
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean  @default(true)
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+}
+
+model Sale {
+  id         String   @id @default(cuid())
+  tenantId   String
+  customerId String?
+  total      Decimal  @db.Decimal(10,2)
+  createdAt  DateTime @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+  items    SaleItem[]
+}
+
+model SaleItem {
+  id        String   @id @default(cuid())
+  saleId    String
+  productId String?
+  serviceId String?
+  price     Decimal  @db.Decimal(10,2)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  sale    Sale     @relation(fields: [saleId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+}
+
+model Automation {
+  id         String   @id @default(cuid())
+  tenantId   String
+  name       String
+  type       String
+  message    String
+  triggerMin Int?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model MessageLog {
+  id            String   @id @default(cuid())
+  tenantId      String
+  customerId    String?
+  appointmentId String?
+  channel       String
+  message       String
+  status        String
+  createdAt     DateTime @default(now())
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  customer    Customer?    @relation(fields: [customerId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+}

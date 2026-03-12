@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: salonbelleza_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: salon
+      POSTGRES_PASSWORD: salon_secret
+      POSTGRES_DB: salonbelleza
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U salon -d salonbelleza"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: salonbelleza_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://salon:salon_secret@db:5432/salonbelleza?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production_use_openssl_rand_base64_32}
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
