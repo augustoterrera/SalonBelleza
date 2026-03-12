@@ -9,6 +9,8 @@ import { getAppointments } from "@/lib/actions/appointments"
 import { getProfessionals } from "@/lib/actions/professionals"
 import { DashboardClient } from "./dashboard-client"
 
+export const dynamic = "force-dynamic"
+
 export default async function DashboardPage() {
   const [
     stats,

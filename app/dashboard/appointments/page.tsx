@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { NewAppointmentModal } from "@/components/dashboard/new-appointment-modal"
@@ -98,7 +98,7 @@ function getDateRange(preset: DatePreset, customStart: string, customEnd: string
   }
 }
 
-export default function AppointmentsPage() {
+function AppointmentsPageContent() {
   const searchParams = useSearchParams()
 
   // Data + pagination
@@ -654,5 +654,13 @@ export default function AppointmentsPage() {
         onSuccess={(updated) => setAppointments((prev) => prev.map((a) => a.id === updated.id ? updated : a))}
       />
     </>
+  )
+}
+
+export default function AppointmentsPage() {
+  return (
+    <Suspense>
+      <AppointmentsPageContent />
+    </Suspense>
   )
 }
