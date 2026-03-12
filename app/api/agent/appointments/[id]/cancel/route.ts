@@ -4,11 +4,11 @@ import { validateApiKey, unauthorized, badRequest } from "@/lib/agent-auth"
 
 // PATCH /api/agent/appointments/:id/cancel
 // Body: { reason? }
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const ctx = await validateApiKey(req)
   if (!ctx) return unauthorized()
 
-  const { id } = params
+  const { id } = await params
   const body = await req.json().catch(() => ({}))
   const reason: string | null = body.reason ?? null
 
