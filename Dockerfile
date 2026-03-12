@@ -45,4 +45,4 @@ USER nextjs
 EXPOSE 3000
 
 # Run migrations then start the app
-CMD ["sh", "-c", "node node_modules/.bin/prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node server.js"]
