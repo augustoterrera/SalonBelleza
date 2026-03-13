@@ -31,20 +31,55 @@ import {
   Sparkles,
   Star,
   Palette,
+  Wand2,
+  Sun,
+  Moon,
+  Flower2,
+  Heart,
+  Eye,
+  Smile,
+  Droplets,
+  Flame,
+  Wind,
+  Zap,
+  Crown,
+  Feather,
+  Leaf,
+  Shell,
+  Gem,
+  Brush,
 } from "lucide-react"
 import { getCategories, createCategory, updateCategory, deleteCategory } from "@/lib/actions/categories"
 import { useToast } from "@/hooks/use-toast"
 
 const iconOptions = [
-  { value: 'scissors', icon: Scissors, label: 'Tijeras' },
-  { value: 'hand', icon: Hand, label: 'Mano' },
-  { value: 'sparkles', icon: Sparkles, label: 'Brillos' },
-  { value: 'star', icon: Star, label: 'Estrella' },
-  { value: 'palette', icon: Palette, label: 'Paleta' },
+  { value: 'scissors',  icon: Scissors,  label: 'Tijeras' },
+  { value: 'wand2',     icon: Wand2,     label: 'Varita' },
+  { value: 'wind',      icon: Wind,      label: 'Secado' },
+  { value: 'hand',      icon: Hand,      label: 'Mano' },
+  { value: 'sparkles',  icon: Sparkles,  label: 'Brillos' },
+  { value: 'palette',   icon: Palette,   label: 'Paleta' },
+  { value: 'brush',     icon: Brush,     label: 'Pincel' },
+  { value: 'eye',       icon: Eye,       label: 'Ojos' },
+  { value: 'smile',     icon: Smile,     label: 'Facial' },
+  { value: 'heart',     icon: Heart,     label: 'Corazon' },
+  { value: 'droplets',  icon: Droplets,  label: 'Hidratacion' },
+  { value: 'sun',       icon: Sun,       label: 'Solar' },
+  { value: 'moon',      icon: Moon,      label: 'Nocturno' },
+  { value: 'flame',     icon: Flame,     label: 'Keratina' },
+  { value: 'zap',       icon: Zap,       label: 'Laser' },
+  { value: 'flower2',   icon: Flower2,   label: 'Flor' },
+  { value: 'leaf',      icon: Leaf,      label: 'Natural' },
+  { value: 'feather',   icon: Feather,   label: 'Suave' },
+  { value: 'shell',     icon: Shell,     label: 'Spa' },
+  { value: 'gem',       icon: Gem,       label: 'Premium' },
+  { value: 'crown',     icon: Crown,     label: 'VIP' },
+  { value: 'star',      icon: Star,      label: 'Estrella' },
 ]
 
 const colorOptions = [
-  '#0F7A61', '#EC4899', '#F59E0B', '#8B5CF6', '#EF4444', '#3B82F6', '#10B981', '#F97316'
+  '#0F7A61', '#EC4899', '#F59E0B', '#8B5CF6', '#EF4444', '#3B82F6', '#10B981', '#F97316',
+  '#06B6D4', '#84CC16', '#E11D48', '#7C3AED',
 ]
 
 export default function CategoriesPage() {
@@ -56,6 +91,7 @@ export default function CategoriesPage() {
   const [formName, setFormName] = useState("")
   const [formDescription, setFormDescription] = useState("")
   const [formColor, setFormColor] = useState(colorOptions[0])
+  const [formIcon, setFormIcon] = useState(iconOptions[0].value)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -67,6 +103,7 @@ export default function CategoriesPage() {
     setFormName("")
     setFormDescription("")
     setFormColor(colorOptions[0])
+    setFormIcon(iconOptions[0].value)
   }
 
   const openNew = () => {
@@ -80,6 +117,7 @@ export default function CategoriesPage() {
     setFormName(category.name)
     setFormDescription(category.description || "")
     setFormColor(category.color || colorOptions[0])
+    setFormIcon(category.icon || iconOptions[0].value)
     setModalOpen(true)
   }
 
@@ -91,6 +129,7 @@ export default function CategoriesPage() {
         const updated = await updateCategory(editingCategory.id, {
           name: formName,
           color: formColor,
+          icon: formIcon,
           description: formDescription || undefined,
         })
         if (updated) {
@@ -103,6 +142,7 @@ export default function CategoriesPage() {
         const created = await createCategory({
           name: formName,
           color: formColor,
+          icon: formIcon,
           description: formDescription || undefined,
         })
         setCategories((prev) => [...prev, created])
@@ -134,9 +174,8 @@ export default function CategoriesPage() {
     }
   }
 
-  const getIcon = (iconName?: string) => {
-    const iconOption = iconOptions.find(i => i.value === iconName)
-    return iconOption?.icon || Scissors
+  const getIconComponent = (iconName?: string) => {
+    return iconOptions.find(i => i.value === iconName)?.icon || Scissors
   }
 
   return (
@@ -157,7 +196,7 @@ export default function CategoriesPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {categories.map((category: any) => {
-            const IconComponent = getIcon(category.icon)
+            const IconComponent = getIconComponent(category.icon)
 
             return (
               <Card key={category.id} className="overflow-hidden">
@@ -215,7 +254,6 @@ export default function CategoriesPage() {
             )
           })}
 
-          {/* Add New Card */}
           <Card className="border-dashed">
             <CardContent className="p-0">
               <button
@@ -240,7 +278,7 @@ export default function CategoriesPage() {
           setModalOpen(open)
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCategory ? "Editar categoria" : "Nueva categoria"}</DialogTitle>
           </DialogHeader>
@@ -264,6 +302,47 @@ export default function CategoriesPage() {
                 onChange={(e) => setFormDescription(e.target.value)}
               />
             </div>
+
+            {/* Preview */}
+            <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+              <div
+                className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: formColor }}
+              >
+                {(() => {
+                  const Icon = getIconComponent(formIcon)
+                  return <Icon className="h-6 w-6 text-white" />
+                })()}
+              </div>
+              <div>
+                <p className="font-medium text-sm">{formName || "Vista previa"}</p>
+                <p className="text-xs text-muted-foreground">{formDescription || "Descripcion"}</p>
+              </div>
+            </div>
+
+            {/* Icon picker */}
+            <div className="space-y-2">
+              <Label>Icono</Label>
+              <div className="grid grid-cols-8 gap-1.5">
+                {iconOptions.map(({ value, icon: Icon, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    title={label}
+                    onClick={() => setFormIcon(value)}
+                    className={`h-9 w-9 rounded-lg flex items-center justify-center transition-all ${
+                      formIcon === value
+                        ? 'ring-2 ring-primary bg-primary/10'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Color picker */}
             <div className="space-y-2">
               <Label>Color</Label>
               <div className="flex gap-2 flex-wrap">
@@ -273,13 +352,14 @@ export default function CategoriesPage() {
                     type="button"
                     onClick={() => setFormColor(color)}
                     className={`h-8 w-8 rounded-full transition-all ${
-                      formColor === color ? 'ring-2 ring-offset-2 ring-primary' : ''
+                      formColor === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : ''
                     }`}
                     style={{ backgroundColor: color }}
                   />
                 ))}
               </div>
             </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
                 Cancelar

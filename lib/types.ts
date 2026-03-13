@@ -64,6 +64,7 @@ export interface ServiceCategory {
   name: string
   description?: string
   color: string
+  icon?: string
   isActive: boolean
   createdAt: Date
   updatedAt: Date

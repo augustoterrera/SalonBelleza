@@ -17,6 +17,7 @@ function mapCategory(prismaCategory: any): CategoryWithStats {
     tenantId: prismaCategory.tenantId,
     name: prismaCategory.name,
     color: prismaCategory.color || "",
+    icon: prismaCategory.icon ?? undefined,
     description: prismaCategory.description || undefined,
     isActive: prismaCategory.isActive ?? true,
     createdAt: prismaCategory.createdAt,
@@ -59,6 +60,7 @@ export async function getCategoryById(id: string): Promise<CategoryWithStats | n
 export async function createCategory(data: {
   name: string
   color: string
+  icon?: string
   description?: string
 }): Promise<Category> {
   const tenantId = await getTenantId()
@@ -78,6 +80,7 @@ export async function updateCategory(
   data: Partial<{
     name: string
     color: string
+    icon: string
     description: string
   }>
 ): Promise<Category | null> {

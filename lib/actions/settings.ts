@@ -47,7 +47,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings | null> {
     address: tenant.address || undefined,
     phone: tenant.phone || undefined,
     email: tenant.email || undefined,
-    logoUrl: undefined,
+    logoUrl: (tenant as any).logoUrl || undefined,
     timezone: tenant.timezone,
     currency: "ARS" // Mock default
   }
@@ -70,6 +70,7 @@ export async function updateBusinessSettings(data: Partial<{
   if (data.address !== undefined) updateData.address = data.address
   if (data.phone !== undefined) updateData.phone = data.phone
   if (data.email !== undefined) updateData.email = data.email
+  if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl || null
   if (data.timezone !== undefined) updateData.timezone = data.timezone
   
   const tenant = await prisma.tenant.update({
