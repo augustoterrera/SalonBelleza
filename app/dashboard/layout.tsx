@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { getSession } from "@/lib/session"
