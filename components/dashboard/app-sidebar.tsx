@@ -61,7 +61,7 @@ const settingsNavItems = [
   { title: "Configuracion", href: "/dashboard/settings", icon: Settings },
 ]
 
-export function AppSidebar({ userName, userEmail }: { userName?: string; userEmail?: string }) {
+export function AppSidebar({ userName, userEmail, tenantName }: { userName?: string; userEmail?: string; tenantName?: string }) {
   const pathname = usePathname()
 
   return (
@@ -76,7 +76,7 @@ export function AppSidebar({ userName, userEmail }: { userName?: string; userEma
             className="rounded-3xl shadow-lg bg-gray-300"
           />
           <div className="flex flex-col">
-            <span className="text-lg font-semibold text-white">Bella</span>
+            <span className="text-lg font-semibold text-white">{tenantName || "Mi Salon"}</span>
             <span className="text-xs text-white/60">Salon Management</span>
           </div>
         </Link>
